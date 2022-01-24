@@ -12,13 +12,10 @@ import java.util.HashSet;
 import java.util.Enumeration;
 import java.util.zip.CRC32;
 
-// import sun.misc.URLClassPath;
-// import sun.misc.Resource;
+import sun.misc.URLClassPath;
+import sun.misc.Resource;
 
-// import java.io.FileWriter;
-// import java.io.BufferedWriter;
-
-public class JarFullLoad {
+public class JarFullRead {
     public static Set<String> getClassNamesFromJarFile(String jarName) throws IOException {
         File givenFile = new File(jarName);
         Set<String> classNames = new HashSet<>();
@@ -27,12 +24,10 @@ public class JarFullLoad {
             while (e.hasMoreElements()) {
                 JarEntry jarEntry = e.nextElement();
                 if (jarEntry.getName().endsWith(".class")) {
-                    String className = jarEntry.getName()
-                        .replace("/", ".")
-                        .replace(".class", "");
-                    if (!className.startsWith("com.sun.org.apache.bcel.internalfile")) {
-                        classNames.add(className);
-                    }
+                    String className = jarEntry.getName();
+                    //  .replace("/", ".");
+                    //  .replace(".class", "");
+                    classNames.add(className);
                 }
             }
             return classNames;
@@ -42,33 +37,32 @@ public class JarFullLoad {
         // jconsole
         String jarName = System.getProperty("user.dir") + '/' + "rt.jar";
         System.out.println(jarName);
-        String[] classNames;
-        URLClassLoader cld;
+
         try {
-            classNames = getClassNamesFromJarFile(jarName).toArray(new String[0]);
+            String[] classNames = getClassNamesFromJarFile(jarName).toArray(new String[0]);
+
             URL url = new URL("file", "", jarName);
             URL[] urls = new URL[1];
             urls[0] = url;
-            cld = new URLClassLoader(urls);
+            
+            URLClassPath ucp = new URLClassPath(urls);
+            for (String name : classNames) {
+                Resource res = ucp.getResource(name, false);
+                CRC32 crc = new CRC32();
+                crc.update(res.getBytes());
+                System.out.println("hash " + crc.getValue() + ' ' + name);
+            }
+
+            // URLClassLoader cld = new URLClassLoader(urls);
+            // System.out.println("cld " + cld);
+            
+            // Class cls = cld.loadClass(classNames[0]);
+            // System.out.println("class " + cls);
+
+
+            
         } catch (Exception e) {
             System.out.println("!smth wrong! " + e);
-            return;
-        }
-        
-        try {
-            // BufferedWriter writer = new BufferedWriter(new FileWriter("rt-classes.txt"));
-
-            // URLClassPath ucp = new URLClassPath(urls);
-            for (String name : classNames) {
-                Class cls = cld.loadClass(name);
-                // System.out.println(name);
-            }
-            System.out.println("finish");
-            // Class cls = cld.loadClass(classNames[0]);
-
-            // writer.close();
-        }  catch (Exception e) {
-            System.out.println(e);
             return;
         }
     }
