@@ -368,39 +368,6 @@ public class URLClassLoader extends SecureClassLoader implements Closeable {
                         String path = name.replace('.', '/').concat(".class");
                         Resource res = ucp.getResource(path, false);
                         if (res != null) {
-
-                            // first try to access cache with CRC32
-                            // try {
-                            //     System.out.println("URLCld: Trying with CRC32");
-                            //     int crc32 = res.getCRC32();
-
-                            //     // TODO make -1 universal crc invalid value
-                            //     if (crc32 == -1) {
-                            //         throw new IOException("no crc32 in resource");
-                            //     }
-                            //     int bc_len = res.getContentLength();
-
-                            //     byte[] header = "1234".getBytes();
-                            //     byte[] crc32_bytes = ByteBuffer.allocate(4).putInt(crc32).array();
-                            //     byte[] bc_len_bytes = ByteBuffer.allocate(4).putInt(bc_len).array();
-
-                            //     ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
-                            //     outputStream.write(header);
-                            //     outputStream.write(crc32_bytes);
-                            //     outputStream.write(bc_len_bytes);
-
-                            //     byte buf[] = outputStream.toByteArray();
-
-                            //     ByteBuffer bbuf = ByteBuffer.wrap(buf);
-
-                            //     return myDefineClass(name, bbuf, null);
-                            // } catch (java.lang.ClassNotFoundException e) {
-                            //     System.out.println("caught and falling back: " + e);
-                            // } catch (java.io.IOException e) {
-                            //     System.out.println("caught and falling back: " + e);
-                            // }
-                            
-                            // fallback to full bytecode load
                             try {
                                 return defineClass(name, res);
                             } catch (IOException e) {
@@ -477,8 +444,8 @@ public class URLClassLoader extends SecureClassLoader implements Closeable {
         }
     }
 
-    public Class<?> myDefineClass(String name, ByteBuffer bb, ProtectionDomain pd) throws IOException, ClassNotFoundException {
-        return defineClass(name, bb, pd);
+    public Class<?> myDefineClass(String name, ByteBuffer bb, CodeSource cs) throws IOException, ClassNotFoundException {
+        return defineClass(name, bb, cs);
     }
     
     /*
@@ -496,19 +463,58 @@ public class URLClassLoader extends SecureClassLoader implements Closeable {
             Manifest man = res.getManifest();
             definePackageInternal(pkgname, man, url);
         }
+        
+        CodeSigner[] signers = res.getCodeSigners();
+        CodeSource cs = new CodeSource(url, signers);
+
+        // first try to access cache with CRC32
+        try {
+            // System.out.println("URLCld: Trying with CRC32");
+            int crc32 = res.getCRC32();
+
+            // TODO make -1 universal crc invalid value
+            if (crc32 == -1) {
+                throw new IOException("no crc32 in resource");
+            }
+            int bc_len = res.getContentLength();
+
+            byte[] header = "1234".getBytes();
+            byte[] crc32_bytes = ByteBuffer.allocate(4).putInt(crc32).array();
+            byte[] bc_len_bytes = ByteBuffer.allocate(4).putInt(bc_len).array();
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
+            outputStream.write(header);
+            outputStream.write(crc32_bytes);
+            outputStream.write(bc_len_bytes);
+            
+            byte buf[] = outputStream.toByteArray();
+            ByteBuffer bbuf = ByteBuffer.wrap(buf);
+            
+            // CodeSigner[] signers = res.getCodeSigners();
+            // CodeSource cs = new CodeSource(res.getCodeSourceURL(), signers);
+
+            // TODO fix java.lang.ClassNotFoundException supposedly not thrown
+            return myDefineClass(name, bbuf, cs);
+        } catch (java.lang.ClassNotFoundException e) {
+            System.out.println("caught and falling back: " + e);
+        } catch (java.io.IOException e) {
+            System.out.println("caught and falling back: " + e);
+        }
+        // fallback to full bytecode load
+       
         // Now read the class bytes and define the class
         java.nio.ByteBuffer bb = res.getByteBuffer();
         if (bb != null) {
             // Use (direct) ByteBuffer:
-            CodeSigner[] signers = res.getCodeSigners();
-            CodeSource cs = new CodeSource(url, signers);
+            // CodeSigner[] signers = res.getCodeSigners();
+            // CodeSource cs = new CodeSource(url, signers);
             sun.misc.PerfCounter.getReadClassBytesTime().addElapsedTimeFrom(t0);
             return defineClass(name, bb, cs);
         } else {
             byte[] b = res.getBytes();
             // must read certificates AFTER reading bytes.
-            CodeSigner[] signers = res.getCodeSigners();
-            CodeSource cs = new CodeSource(url, signers);
+            // CodeSigner[] signers = res.getCodeSigners();
+            // CodeSource cs = new CodeSource(url, signers);
             sun.misc.PerfCounter.getReadClassBytesTime().addElapsedTimeFrom(t0);
             return defineClass(name, b, 0, b.length, cs);
         }
