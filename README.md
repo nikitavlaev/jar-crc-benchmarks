@@ -1,6 +1,6 @@
 # Benchmark suite for Azul CRaM
 
-## Prerequsites
+## Prerequisites
 
 Download [guava-31.0.1-jre.jar](https://repo1.maven.org/maven2/com/google/guava/guava/31.0.1-jre/guava-31.0.1-jre.jar) for JarFullLoad benchmark.
 
