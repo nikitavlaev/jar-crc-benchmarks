@@ -7,17 +7,17 @@ Download [dacapo-9.12-MR1-bach.jar](https://sourceforge.net/projects/dacapobench
 # Create images for checkpoint
 
 ```console
-./performance.sh c
+./scripts/performance.sh c
 ```
 
 # Run performance benchmark
 
 ```console
-./performance.sh
+./scripts/performance.sh
 ```
 
 # Run memory benchmark
 
 ```console
-./memory.sh
+./scripts/memory.sh
 ```
