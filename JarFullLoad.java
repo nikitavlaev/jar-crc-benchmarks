@@ -40,7 +40,7 @@ public class JarFullLoad {
     }
     public static void main(String[] args) {
         // jconsole
-        String jarName = System.getProperty("user.dir") + '/' + "rt.jar";
+        String jarName = System.getProperty("user.dir") + '/' + "guava-31.0.1-jre.jar";
         System.out.println(jarName);
         String[] classNames;
         URLClassLoader cld;
