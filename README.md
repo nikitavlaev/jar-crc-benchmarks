@@ -1,4 +1,6 @@
-# Prerequsites
+# Benchmark suite for Azul CRaM
+
+## Prerequsites
 
 Download [guava-31.0.1-jre.jar](https://repo1.maven.org/maven2/com/google/guava/guava/31.0.1-jre/guava-31.0.1-jre.jar) for JarFullLoad
 
@@ -9,18 +11,18 @@ Set <b>$JAVA_HOME</b> to the home directory of the patched version of CRaM.
 
 Set <b>$JAVA_HOME1</b> to the home directory of the clean version of CRaM.
 
-# Create images for checkpoint
+## Create images for checkpoint
 ```console
 ./scripts/performance.sh c
 ```
 
-# Run performance benchmark
+## Run performance benchmark
 
 ```console
 ./scripts/performance.sh
 ```
 
-# Run memory benchmark
+## Run memory benchmark
 
 ```console
 ./scripts/memory.sh
